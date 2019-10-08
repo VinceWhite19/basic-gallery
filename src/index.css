@@ -11,7 +11,9 @@
 .spinner-border {
   margin-top: 5rem;
 }
-
 .input-range {
   margin-bottom: 2rem;
+}
+.alert-primary {
+  width: 100%;
 }

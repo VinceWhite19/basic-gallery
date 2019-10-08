@@ -9,15 +9,18 @@ export class Post extends PureComponent {
 
   render() {
     const { post } = this.props;
-    let thumbnail;
-    if (post.thumbnail.match(/\.(jpeg|jpg|gif|png)$/) != null) {
-      thumbnail = post.thumbnail;
-    } else {
-      thumbnail = Placeholder;
-    }
+
     return (
       <div className="col-4">
-        <img className="card-img-top card-img--height" src={thumbnail} alt="" />
+        <img
+          className="card-img-top card-img--height"
+          src={
+            post.thumbnail.match(/\.(jpeg|jpg|gif|png)$/)
+              ? post.thumbnail
+              : Placeholder
+          }
+          alt=""
+        />
         <div className="card-body">
           <h6 className="card-title">{post.title}</h6>
           <p className="card-text">Number of comments: {post.num_comments}</p>

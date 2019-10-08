@@ -6,37 +6,75 @@ import InputRange from "react-input-range";
 export default class App extends Component {
   state = {
     autoRefresh: false,
-    value: 0
+    filterValue: 0,
+    posts: [],
+    loading: false
   };
+
+  getPosts = async () => {
+    this.setState({ loading: true });
+    try {
+      const response = await fetch(
+        `https://www.reddit.com/r/reactjs.json?limit=100`
+      );
+      const result = await response.json();
+      const posts = result.data.children.map(obj => obj.data);
+
+      this.setState({
+        posts: posts,
+        loading: false
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  componentDidMount() {
+    this.getPosts();
+  }
 
   toggleAutoRefresh = () => {
-    this.setState({
-      autoRefresh: !this.state.autoRefresh
-    });
+    this.setState(
+      state => ({
+        autoRefresh: !state.autoRefresh
+      }),
+      () => {
+        if (this.state.autoRefresh) {
+          this.interval = setInterval(this.getPosts, 3000);
+        } else {
+          clearInterval(this.interval);
+        }
+      }
+    );
   };
 
-  updateFilterRange = value => this.setState({ value });
+  updateFilterRange = filterValue => this.setState({ filterValue });
 
   render() {
-    const { autoRefresh, value } = this.state;
+    const { autoRefresh, filterValue, posts, loading } = this.state;
     return (
       <div className="container">
         <div className="row">
           <div className="col-12 text-center">
             <h1 className="text-center p-4">Top Commented</h1>
-            <span className="mr-5">Current filter: {value}</span>
+            <span className="mr-5">Current filter: {filterValue}</span>
 
             <Button
               autoRefresh={autoRefresh}
               toggleAutoRefresh={this.toggleAutoRefresh}
             />
             <InputRange
-              maxValue={100}
+              maxValue={300}
               minValue={0}
-              value={value}
+              value={filterValue}
               onChange={this.updateFilterRange}
             />
-            <PostsGallery value={value} autoRefresh={autoRefresh} />
+            <PostsGallery
+              value={filterValue}
+              posts={posts}
+              loading={loading}
+              autoRefresh={autoRefresh}
+            />
           </div>
         </div>
       </div>

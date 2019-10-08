@@ -1,89 +1,33 @@
-import React, { Component } from "react";
+import React, { PureComponent } from "react";
 import Post from "./Post";
 import { Spinner, Alert } from "reactstrap";
-import axios from "axios";
 import PropTypes from "prop-types";
 
-export default class PostsGallery extends Component {
-  state = {
-    posts: [],
-    loading: false
-  };
-
+export default class PostsGallery extends PureComponent {
   static propTypes = {
-    value: PropTypes.number.isRequired,
-    autoRefresh: PropTypes.bool.isRequired
-  };
-  getPosts = async () => {
-    this.setState({ loading: true });
-    try {
-      const result = await axios.get(
-        `https://www.reddit.com/r/reactjs.json?limit=100`
-      );
-
-      const posts = result.data.data.children.map(obj => obj.data);
-      const postsSorted = posts.sort((a, b) => b.num_comments - a.num_comments);
-
-      const filter = postsSorted.filter(
-        post => post.num_comments >= this.props.value
-      );
-
-      this.setState({
-        posts: filter,
-        loading: false
-      });
-    } catch (err) {
-      console.error(err);
-    }
+    loading: PropTypes.bool.isRequired,
+    posts: PropTypes.array.isRequired
   };
 
-  refreshPosts = delay =>
-    setTimeout(
-      function request() {
-        this.getPosts();
-        if (this.props.autoRefresh) {
-          setTimeout(request.bind(this), delay);
-        }
-      }.bind(this),
-      delay
-    );
-
-  componentDidMount() {
-    if (this.props.autoRefresh) {
-      this.refreshPosts(3000);
-    } else {
-      this.getPosts();
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    const { autoRefresh, value } = this.props;
-    if (autoRefresh && autoRefresh !== prevProps.autoRefresh) {
-      this.refreshPosts(3000);
-    }
-
-    if (value !== prevProps.value) {
-      this.getPosts();
-    }
-  }
+  getPostsByComments = posts =>
+    posts
+      .filter(post => post.num_comments >= this.props.value)
+      .sort((a, b) => b.num_comments - a.num_comments);
 
   render() {
-    const { posts, loading } = this.state;
+    const { loading, posts } = this.props;
+    const postsByComments = this.getPostsByComments(posts);
 
-    if (loading) {
-      return <Spinner color="primary" />;
-    } else if (posts.length === 0) {
-      return (
-        <Alert color="primary">No results found matching your criteria</Alert>
-      );
-    } else {
-      return (
-        <div className="row mt-5">
-          {posts.map(post => {
-            return <Post key={post.id} post={post} />;
-          })}
-        </div>
-      );
-    }
+    return (
+      <div className="row mt-5">
+        {loading ? (
+          <Spinner color="primary" />
+        ) : postsByComments.length > 0 ? (
+          postsByComments.map(post => <Post key={post.id} post={post} />)
+        ) : (
+          <Alert color="primary">No results found matching your criteria</Alert>
+        )}
+      </div>
+    );
   }
 }
